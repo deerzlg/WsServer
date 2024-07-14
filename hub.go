@@ -39,7 +39,7 @@ func (h *Hub) run() {
 				delete(h.clients, client)
 				close(client.send)
 				if len(h.clients) == 0 {
-					house.Delete(h.roomId)
+					roomHubMap.Delete(h.roomId)
 					roomMutex.Unlock()
 					mutexForRoomMutexes.Lock()
 					if roomMutex.TryLock() {
