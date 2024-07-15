@@ -44,6 +44,11 @@ type Client struct {
 	send chan []byte
 }
 
+type Message struct {
+	from *Client
+	data []byte
+}
+
 // readPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
@@ -66,7 +71,7 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		c.hub.broadcast <- Message{from: c, data: message}
 	}
 }
 
@@ -123,7 +128,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 8)}
 	client.hub.clients[client] = true
 	roomMutexes[hub.roomId].Unlock()
 
