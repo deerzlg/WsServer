@@ -31,6 +31,9 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 // Client is a middleman between the websocket connection and the hub.
@@ -128,12 +131,13 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	// 新建一个Client实例
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 8)}
 	client.hub.clients[client] = true
+	//完成client注册后，解锁房间锁
 	roomMutexes[hub.roomId].Unlock()
 
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
+	// 通过在新的 goroutine 中执行所有读写工作，允许调用者引用的内存被回收。
 	go client.writePump()
 	go client.readPump()
 }

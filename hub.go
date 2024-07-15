@@ -54,6 +54,8 @@ func (h *Hub) run() {
 			}
 			roomMutex.Unlock()
 		case message := <-h.broadcast:
+			roomMutex := roomMutexes[h.roomId]
+			roomMutex.Lock()
 			for client := range h.clients {
 				// Don't send message to sender.
 				if client != message.from {
@@ -65,6 +67,7 @@ func (h *Hub) run() {
 					}
 				}
 			}
+			roomMutex.Unlock()
 		}
 	}
 }
